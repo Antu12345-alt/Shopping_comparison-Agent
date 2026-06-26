@@ -1,0 +1,338 @@
+{
+  "updatedAt": "2026-06-26T09:45:46.122Z",
+  "createdAt": "2026-06-24T10:13:09.647Z",
+  "id": "xkYwQreJgn5rzOGp",
+  "name": "shopping comparison",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://fakestoreapi.com/products/1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -144
+      ],
+      "id": "d97ef4e0-7c6f-468b-a3f3-24571d58c393",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://dummyjson.com/products",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        64
+      ],
+      "id": "254f50a4-2239-4791-a859-71804ad14e35",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        400,
+        -80
+      ],
+      "id": "d78d8c9c-fd82-4431-93d3-cd30be6b97fd",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "maxItems": 31
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -128
+      ],
+      "id": "48966faa-c1c1-4e92-8b22-c7a77be4da04",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Compare the products and recommend the best one.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        752,
+        64
+      ],
+      "id": "5d83b688-44b6-4c11-98d6-85b502dd1243",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        240
+      ],
+      "id": "97d4ae4c-5db7-4c0d-ba7c-6ff96ffc9e9c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "I1B7QL6IAvwKS9v5",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  return {\n    json: {\n      title: item.json.title,\n      price: item.json.price,\n      rating: item.json.rating.rate,\n      category: item.json.category,\n      image: item.json.image,\n      source: \"FakeStore\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -288
+      ],
+      "id": "ad1d6b58-3370-44b9-b70a-aa1908268c04",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const products = $input.first().json.products;\n\nreturn products.map(product => ({\n  json: {\n    title: product.title,\n    price: product.price,\n    rating: product.rating,\n    category: product.category,\n    image: product.thumbnail,\n    source: \"DummyJSON\",\n    link: `https://dummyjson.com/products/${product.id}`\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        160
+      ],
+      "id": "a2292132-2015-4cb3-b71b-fd4a1a9e0dac",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const products = $input.all().map(item => item.json);\n\nproducts.sort((a, b) => a.price - b.price);\n\nreturn [\n  {\n    json: {\n      bestProduct: products[0],\n      allProducts: products\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        -128
+      ],
+      "id": "5996c922-8183-41ed-9626-271b09fb3404",
+      "name": "Compare node"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        192
+      ],
+      "id": "a78c0f25-75d0-4941-b3db-b352ef7b6552",
+      "name": "When chat message received",
+      "webhookId": "1cc82d47-f3b5-46c4-b089-7d013944a56e"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -32
+      ],
+      "id": "dbb52430-f2a4-4109-9933-0bf678618f12",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Compare node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare node": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "f75070cb-ac64-40cc-8f7c-04a422100336",
+  "activeVersionId": null,
+  "versionCounter": 76,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "shared": [
+    {
+      "updatedAt": "2026-06-24T10:13:09.652Z",
+      "createdAt": "2026-06-24T10:13:09.652Z",
+      "role": "workflow:owner",
+      "workflowId": "xkYwQreJgn5rzOGp",
+      "projectId": "bYyLxszsG4qj6O8f",
+      "project": {
+        "updatedAt": "2026-06-24T10:08:01.907Z",
+        "createdAt": "2026-06-24T09:55:18.953Z",
+        "id": "bYyLxszsG4qj6O8f",
+        "name": "Antu khad <antuiit90@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "8cdd88fb-cfdf-46f6-878c-6b4d0211c0ed"
+      }
+    }
+  ],
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": null,
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "checksum": "e2486d8cdc3eb8426ba05e468f1d0007fdeb5c40dc40e0adab38bb53db274a4b"
+}
